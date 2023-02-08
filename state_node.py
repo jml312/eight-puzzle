@@ -4,10 +4,10 @@ from state import DIRECTION
 class StateNode:
     '''A node in the search tree. Contains a State, the cost to reach the node (g_score), the heuristic cost to reach the goal (h_score), the f score (g_score + h_score), the heuristic used, the move direction to reach the node from its parent, and a reference to its parent node.'''
 
-    def __init__(self, state, g_score, h_score, heuristic, direction=None, parent=None):
+    def __init__(self, state, g_score, heuristic, direction=None, parent=None):
         self.state = state
         self.g_score = g_score
-        self.h_score = h_score
+        self.h_score = self.state.h_score(heuristic)
         self.f_score = self.g_score + self.h_score
         self.heuristic = heuristic
         self.direction = direction
@@ -22,8 +22,6 @@ class StateNode:
             if child_state:
                 child_node = StateNode(state=child_state,
                                        g_score=self.g_score + 1,
-                                       h_score=child_state.h_score(
-                                           self.heuristic),
                                        heuristic=self.heuristic,
                                        direction=direction,
                                        parent=self)

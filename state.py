@@ -58,7 +58,7 @@ class State:
 
         for i in range(self.ROWS):
             for j in range(self.COLUMNS):
-                if self.state[i][j] == CELL.BLANK.value:
+                if self.state[i][j] == CELL.BLANK:
                     return (i, j)
 
     def print_state(self):
@@ -70,7 +70,7 @@ class State:
         '''Prints the state of the puzzle in a more readable format.'''
 
         for idx, row in enumerate(self.state):
-            row = [cell if cell != CELL.BLANK.value else " " for cell in row]
+            row = [cell if cell != CELL.BLANK else " " for cell in row]
             print("-" * 13)
             print("| {} | {} | {} |".format(*row))
             is_last_row = idx == self.ROWS - 1
@@ -106,7 +106,7 @@ class State:
             return move_in_direction(blank_row, blank_col + 1)
 
     def randomize_state(self, n):
-        '''Randomizes the state of the puzzle by making n random moves.'''
+        '''Randomizes the state of the puzzle by making n random moves from the goal state.'''
 
         self.set_state([row[:] for row in self.goal])
         for _ in range(n):
@@ -132,7 +132,7 @@ class State:
         misplaced_tiles = 0
         for i in range(self.ROWS):
             for j in range(self.COLUMNS):
-                if self.state[i][j] != CELL.BLANK.value and self.state[i][j] != self.goal[i][j]:
+                if self.state[i][j] != CELL.BLANK and self.state[i][j] != self.goal[i][j]:
                     misplaced_tiles += 1
         return misplaced_tiles
 
@@ -148,7 +148,7 @@ class State:
         manhattan_distance = 0
         for i in range(self.ROWS):
             for j in range(self.COLUMNS):
-                if self.state[i][j] != CELL.BLANK.value:
+                if self.state[i][j] != CELL.BLANK:
                     curr_pos = (i, j)
                     target_pos = find_target_position(self.state[i][j])
                     manhattan_distance += abs(curr_pos[0] - target_pos[0]) + abs(
