@@ -92,14 +92,17 @@ class State:
             if blank_row == 0:
                 return None
             return move_in_direction(blank_row - 1, blank_col)
+
         elif direction == DIRECTION.DOWN:
             if blank_row == self.ROWS - 1:
                 return None
             return move_in_direction(blank_row + 1, blank_col)
+
         elif direction == DIRECTION.LEFT:
             if blank_col == 0:
                 return None
             return move_in_direction(blank_row, blank_col - 1)
+
         elif direction == DIRECTION.RIGHT:
             if blank_col == self.COLUMNS - 1:
                 return None
