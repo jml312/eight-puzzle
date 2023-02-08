@@ -3,6 +3,8 @@ from random import seed, choice
 
 
 class CELL(str, Enum):
+    '''Possible cell values of the state.'''
+
     BLANK = "b"
     ONE = "1"
     TWO = "2"
@@ -15,6 +17,8 @@ class CELL(str, Enum):
 
 
 class DIRECTION(str, Enum):
+    '''Possible moves of the blank cell.'''
+
     UP = "up"
     DOWN = "down"
     LEFT = "left"
@@ -22,51 +26,67 @@ class DIRECTION(str, Enum):
 
 
 class HEURISTIC(str, Enum):
+    '''Possible heuristics to use for the search.'''
+
     H1 = "h1"
     H2 = "h2"
 
 
 class State:
+    '''The state of the eight puzzle. Contains the current state of the puzzle, the position of the blank cell, and the goal state.'''
+
     ROWS = 3
     COLUMNS = 3
-    GOAL = [[CELL.BLANK.value, CELL.ONE.value, CELL.TWO.value],
-            [CELL.THREE.value, CELL.FOUR.value, CELL.FIVE.value],
-            [CELL.SIX.value, CELL.SEVEN.value, CELL.EIGHT.value]]
+    GOAL = [[CELL.BLANK, CELL.ONE, CELL.TWO],
+            [CELL.THREE, CELL.FOUR, CELL.FIVE],
+            [CELL.SIX, CELL.SEVEN, CELL.EIGHT]]
 
-    def __init__(self, state=None):
+    def __init__(self, state=None, goal=GOAL):
         seed(1)
         if state:
             self.set_state(state)
+        self.goal = goal
 
     def set_state(self, state):
+        '''Sets the state of the puzzle.'''
+
         self.state = state
         self.blank_position = self.find_blank_position()
 
     def find_blank_position(self):
+        '''Finds the position of the blank cell in the state.'''
+
         for i in range(self.ROWS):
             for j in range(self.COLUMNS):
                 if self.state[i][j] == CELL.BLANK.value:
                     return (i, j)
 
-    # def print_state(self):
-    #     print(" ".join(["".join(map(str, cell))
-    #           for cell in self.state]) + "\n")
-
     def print_state(self):
-        for i in range(self.ROWS):
-            for j in range(self.COLUMNS):
-                print(self.state[i][j], end=' ')
-            print()
-        print()
+        '''Prints the state of the puzzle.'''
+
+        print(self.__repr__())
+
+    def pretty_print_state(self):
+        '''Prints the state of the puzzle in a more readable format.'''
+
+        for idx, row in enumerate(self.state):
+            row = [cell if cell != CELL.BLANK.value else " " for cell in row]
+            print("-" * 13)
+            print("| {} | {} | {} |".format(*row))
+            is_last_row = idx == self.ROWS - 1
+            if is_last_row:
+                print("-" * 13)
 
     def move(self, direction):
+        '''Moves the blank cell in the given direction. Returns a new State object if the move is valid, otherwise returns None.'''
+
         blank_row, blank_col = self.blank_position
 
         def move_in_direction(new_row, new_col):
             self.state[blank_row][blank_col] = self.state[new_row][new_col]
             self.state[new_row][new_col] = CELL.BLANK.value
             self.blank_position = (new_row, new_col)
-            return State(self.state)
+            return self
 
         if direction == DIRECTION.UP:
             if blank_row == 0:
@@ -86,35 +106,43 @@ class State:
             return move_in_direction(blank_row, blank_col + 1)
 
     def randomize_state(self, n):
-        self.set_state([row[:] for row in self.GOAL])
+        '''Randomizes the state of the puzzle by making n random moves.'''
+
+        self.set_state([row[:] for row in self.goal])
         for _ in range(n):
-            random_direction = choice(list(DIRECTION)).value
+            random_direction = choice(list(DIRECTION))
             self.move(random_direction)
 
     def copy(self):
-        return State([row[:] for row in self.state])
+        '''Returns a copy of the state.'''
+
+        return State(state=[row[:] for row in self.state], goal=self.goal)
 
     def h_score(self, heuristic):
+        '''Returns the heuristic score of the state based on the given heuristic.'''
+
         if heuristic == HEURISTIC.H1:
             return self.h1()
         elif heuristic == HEURISTIC.H2:
             return self.h2()
 
     def h1(self):
-        '''misplaced tiles heuristic'''
+        '''Misplaced tiles heuristic.'''
+
         misplaced_tiles = 0
         for i in range(self.ROWS):
             for j in range(self.COLUMNS):
-                if self.state[i][j] != CELL.BLANK.value and self.state[i][j] != self.GOAL[i][j]:
+                if self.state[i][j] != CELL.BLANK.value and self.state[i][j] != self.goal[i][j]:
                     misplaced_tiles += 1
         return misplaced_tiles
 
     def h2(self):
-        '''manhattan distance heuristic'''
+        '''Manhattan distance heuristic.'''
+
         def find_target_position(cell):
             for i in range(self.ROWS):
                 for j in range(self.COLUMNS):
-                    if self.GOAL[i][j] == cell:
+                    if self.goal[i][j] == cell:
                         return (i, j)
 
         manhattan_distance = 0
@@ -128,4 +156,6 @@ class State:
         return manhattan_distance
 
     def __repr__(self):
-        return "\n".join([" ".join(map(str, cell)) for cell in self.state]) + "\n"
+        '''Returns a string representation of the state.'''
+
+        return " ".join(["".join(map(str, cell)) for cell in self.state])
