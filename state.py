@@ -37,9 +37,9 @@ class State:
 
     ROWS = 3
     COLUMNS = 3
-    GOAL = [[CELL.BLANK, CELL.ONE, CELL.TWO],
-            [CELL.THREE, CELL.FOUR, CELL.FIVE],
-            [CELL.SIX, CELL.SEVEN, CELL.EIGHT]]
+    GOAL = [[CELL.BLANK.value, CELL.ONE.value, CELL.TWO.value],
+            [CELL.THREE.value, CELL.FOUR.value, CELL.FIVE.value],
+            [CELL.SIX.value, CELL.SEVEN.value, CELL.EIGHT.value]]
 
     def __init__(self, state=None, goal=GOAL):
         seed(1)

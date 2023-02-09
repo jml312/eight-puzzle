@@ -1,4 +1,4 @@
-# TODO: beam search (verify solution)
+# TODO: beam search (verify solution) - (consider generate random states function in StateNode)
 # TODO: (add comments)
 # TODO: add tests
 
@@ -7,6 +7,7 @@ from sys import argv
 from queue import PriorityQueue
 from state import State, CELL, DIRECTION, HEURISTIC
 from state_node import StateNode
+from random import randint
 
 
 class EightPuzzleSolver(State):
@@ -17,7 +18,7 @@ class EightPuzzleSolver(State):
         self.max_nodes = None
 
     def solve_a_star(self, heuristic):
-        '''Solves the puzzle using the A* algorithm with the specified heuristic. Returns the solution node if a solution is found, otherwise returns None.'''
+        '''Solves the puzzle using the A* algorithm with the specified heuristic. Returns the solution node (or None), number of generated nodes, and number of visited nodes.'''
 
         print(f"\nSolving with A-star {heuristic}")
 
@@ -58,7 +59,7 @@ class EightPuzzleSolver(State):
         return None, num_generated, num_visited
 
     def solve_beam(self, k):
-        '''Solves the puzzle using the beam search algorithm with the specified k value. Returns the solution node if a solution is found, otherwise returns None.'''
+        '''Solves the puzzle using the beam search algorithm with the specified k value. Returns the solution node (or None), number of generated nodes, and number of visited nodes.'''
 
         print(f"\nSolving with beam {k}")
 
@@ -67,14 +68,16 @@ class EightPuzzleSolver(State):
                                heuristic=HEURISTIC.H2,
                                direction=None,
                                parent=None)
-        current_nodes = [start_node]
+        frontier = PriorityQueue()
+        frontier.put((start_node.f_score, start_node))
         reached = {str(start_node): start_node}
         num_generated = 0
         num_visited = 0
 
-        while current_nodes:
-            candidate_nodes = []
-            for curr_node in current_nodes:
+        while not frontier.empty():
+            for _ in range(len(frontier.queue)):
+                _, curr_node = frontier.get()
+
                 num_visited += 1
                 if self.max_nodes and num_visited > self.max_nodes:
                     print(
@@ -92,10 +95,9 @@ class EightPuzzleSolver(State):
                     child_node_key = str(child_node)
                     if child_node_key not in reached or child_node < reached[child_node_key]:
                         reached[child_node_key] = child_node
-                        candidate_nodes.append(child_node)
+                        frontier.put((child_node.f_score, child_node))
 
-            current_nodes = sorted(candidate_nodes,
-                                   key=lambda x: x.f_score)[:k]
+            frontier.queue = frontier.queue[:k]
 
         print("** No solution found **")
         return None, num_generated, num_visited
@@ -105,21 +107,15 @@ class EightPuzzleSolver(State):
 
         for idx, node in enumerate(solution):
             is_last_move = idx == len(solution) - 1
-            if idx == 0:
-                print("Start")
-            else:
-                print(f"Move {idx}: {node.direction.value}")
-                if is_last_move:
-                    print("** Goal **")
+            print("Start" if idx ==
+                  0 else f"Move {idx}: {node.direction.value}")
+            if is_last_move:
+                print("** Goal **")
             node.state.pretty_print_state()
-
             if not is_last_move:
-                print()
-                line = " " * State.COLUMNS * 2 + "|" + " " * State.COLUMNS * 2
-                print(line + "\n" + line)
-                arrow = " " * (State.COLUMNS * 2 - 1) + "\\\'/" + \
-                    " " * (State.COLUMNS * 2 - 1) + "\n"
-                print(arrow)
+                line = f"{' ' * State.COLUMNS * 2}|{' ' * State.COLUMNS * 2}"
+                arrow = f"{' ' * (State.COLUMNS * 2 - 1)}\\'/{' ' * (State.COLUMNS * 2 - 1)}"
+                print(f"\n{line}\n{line}\n{arrow}\n")
 
     def print_solution(self, node=None, num_generated=None, num_visited=None, print_path=False):
         '''Prints the solution to the puzzle.'''
@@ -140,10 +136,9 @@ class EightPuzzleSolver(State):
 
         solution = [s for s in solution if s.direction]
         print("Moves:", len(solution))
-        print("Order:", end=" " if solution else None)
-        for idx, node in enumerate(solution):
-            is_last_move = idx == len(solution) - 1
-            print(node.direction.value, end=" -> " if not is_last_move else None)
+        print("Order:", end=" ")
+        print(" -> ".join([s if isinstance(s, str)
+              else s.direction.value for s in ["START"] + solution + ["GOAL"]]))
 
 
 class ACTION(str, Enum):
