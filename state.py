@@ -71,9 +71,9 @@ class State:
 
         for idx, row in enumerate(self.state):
             row = [cell if cell != CELL.BLANK else " " for cell in row]
+            is_last_row = idx == self.ROWS - 1
             print("-" * 13)
             print("| {} | {} | {} |".format(*row))
-            is_last_row = idx == self.ROWS - 1
             if is_last_row:
                 print("-" * 13)
 
@@ -113,8 +113,7 @@ class State:
 
         self.set_state([row[:] for row in self.goal])
         for _ in range(n):
-            random_direction = choice(list(DIRECTION))
-            self.move(random_direction)
+            self.move(choice(list(DIRECTION)))
 
     def copy(self):
         '''Returns a copy of the state.'''

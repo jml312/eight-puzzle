@@ -1,4 +1,4 @@
-# TODO: beam search (verify solution) - (consider generate random states function in StateNode)
+# TODO: beam search (verify solution)
 # TODO: (add comments)
 # TODO: add tests
 
@@ -7,7 +7,6 @@ from sys import argv
 from queue import PriorityQueue
 from state import State, CELL, DIRECTION, HEURISTIC
 from state_node import StateNode
-from random import randint
 
 
 class EightPuzzleSolver(State):
@@ -23,8 +22,8 @@ class EightPuzzleSolver(State):
         print(f"\nSolving with A-star {heuristic}")
 
         start_node = StateNode(state=self,
-                               g_score=0,
                                heuristic=heuristic,
+                               g_score=0,
                                direction=None,
                                parent=None)
         frontier = PriorityQueue()
@@ -42,7 +41,7 @@ class EightPuzzleSolver(State):
                     f"** No solution found (max nodes of {self.max_nodes} reached) **")
                 return None, num_generated, num_visited
 
-            if curr_node.h_score == 0:
+            if curr_node.is_goal():
                 self.print_solution(node=curr_node,
                                     num_generated=num_generated,
                                     num_visited=num_visited)
@@ -51,6 +50,7 @@ class EightPuzzleSolver(State):
             for child_node in curr_node.get_children():
                 num_generated += 1
                 child_node_key = str(child_node)
+
                 if child_node_key not in reached or child_node < reached[child_node_key]:
                     reached[child_node_key] = child_node
                     frontier.put((child_node.f_score, child_node))
@@ -64,8 +64,8 @@ class EightPuzzleSolver(State):
         print(f"\nSolving with beam {k}")
 
         start_node = StateNode(state=self,
-                               g_score=0,
                                heuristic=HEURISTIC.H2,
+                               g_score=0,
                                direction=None,
                                parent=None)
         frontier = PriorityQueue()
@@ -75,7 +75,7 @@ class EightPuzzleSolver(State):
         num_visited = 0
 
         while not frontier.empty():
-            for _ in range(len(frontier.queue)):
+            for _ in range(frontier.qsize()):
                 _, curr_node = frontier.get()
 
                 num_visited += 1
@@ -84,7 +84,7 @@ class EightPuzzleSolver(State):
                         f"** No solution found (max nodes of {self.max_nodes} reached) **")
                     return None, num_generated, num_visited
 
-                if curr_node.h_score == 0:
+                if curr_node.is_goal():
                     self.print_solution(node=curr_node,
                                         num_generated=num_generated,
                                         num_visited=num_visited)
