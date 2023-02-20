@@ -27,10 +27,10 @@ class StateNode:
                                        parent=self)
                 child_nodes.append(child_node)
         return child_nodes
-    
+
     def is_goal(self):
         '''Returns true if the state of the current node is the goal state (h_score == 0).'''
-        
+
         return self.h_score == 0
 
     def __lt__(self, other):

@@ -1,7 +1,3 @@
-# TODO: beam search (verify solution)
-# TODO: (add comments)
-# TODO: add tests
-
 from enum import Enum
 from sys import argv
 from queue import PriorityQueue
@@ -12,14 +8,17 @@ from state_node import StateNode
 class EightPuzzleSolver(State):
     '''Solver for the eight puzzle game using either the A* or beam search algorithm.'''
 
-    def __init__(self):
+    def __init__(self,  no_print=False, show_path=False):
         super().__init__()
         self.max_nodes = None
+        self.no_print = no_print
+        self.show_path = show_path
 
     def solve_a_star(self, heuristic):
         '''Solves the puzzle using the A* algorithm with the specified heuristic. Returns the solution node (or None), number of generated nodes, and number of visited nodes.'''
 
-        print(f"\nSolving with A-star {heuristic}")
+        if not self.no_print:
+            print(f"\nSolving with A-star {heuristic}")
 
         start_node = StateNode(state=self,
                                heuristic=heuristic,
@@ -37,15 +36,28 @@ class EightPuzzleSolver(State):
 
             num_visited += 1
             if self.max_nodes and num_visited > self.max_nodes:
-                print(
-                    f"** No solution found (max nodes of {self.max_nodes} reached) **")
-                return None, num_generated, num_visited
+                if not self.no_print:
+                    print(
+                        f"** No solution found (max nodes of {self.max_nodes} reached) **")
+                return {
+                    "generated": num_generated,
+                    "visited": num_visited,
+                    "moves": None,
+                    "order": None
+                }
 
             if curr_node.is_goal():
-                self.print_solution(node=curr_node,
-                                    num_generated=num_generated,
-                                    num_visited=num_visited)
-                return curr_node, num_generated, num_visited
+                solution = self.get_solution(curr_node)
+                if not self.no_print:
+                    self.print_solution(solution=solution,
+                                        num_generated=num_generated,
+                                        num_visited=num_visited)
+                return {
+                    "generated": num_generated,
+                    "visited": num_visited,
+                    "moves": len(solution) - 1,
+                    "order": [s.direction.value for s in solution[1:]]
+                }
 
             for child_node in curr_node.get_children():
                 num_generated += 1
@@ -55,52 +67,87 @@ class EightPuzzleSolver(State):
                     reached[child_node_key] = child_node
                     frontier.put((child_node.f_score, child_node))
 
-        print("** No solution found **")
-        return None, num_generated, num_visited
+        if not self.no_print:
+            print("** No solution found **")
+        return {
+            "generated": num_generated,
+            "visited": num_visited,
+            "moves": None,
+            "order": None
+        }
 
     def solve_beam(self, k):
         '''Solves the puzzle using the beam search algorithm with the specified k value. Returns the solution node (or None), number of generated nodes, and number of visited nodes.'''
 
-        print(f"\nSolving with beam {k}")
+        if not self.no_print:
+            print(f"\nSolving with beam {k}")
 
         start_node = StateNode(state=self,
                                heuristic=HEURISTIC.H2,
                                g_score=0,
                                direction=None,
                                parent=None)
-        frontier = PriorityQueue()
-        frontier.put((start_node.f_score, start_node))
+        frontier = [start_node]
         reached = {str(start_node): start_node}
         num_generated = 0
         num_visited = 0
 
-        while not frontier.empty():
-            for _ in range(frontier.qsize()):
-                _, curr_node = frontier.get()
+        while frontier:
+            for _ in range(len(frontier)):
+                curr_node = frontier.pop(0)
 
                 num_visited += 1
                 if self.max_nodes and num_visited > self.max_nodes:
-                    print(
-                        f"** No solution found (max nodes of {self.max_nodes} reached) **")
-                    return None, num_generated, num_visited
+                    if not self.no_print:
+                        print(
+                            f"** No solution found (max nodes of {self.max_nodes} reached) **")
+                    return {
+                        "generated": num_generated,
+                        "visited": num_visited,
+                        "moves": None,
+                        "order": None
+                    }
 
                 if curr_node.is_goal():
-                    self.print_solution(node=curr_node,
-                                        num_generated=num_generated,
-                                        num_visited=num_visited)
-                    return curr_node, num_generated, num_visited
+                    solution = self.get_solution(curr_node)
+                    if not self.no_print:
+                        self.print_solution(solution=solution,
+                                            num_generated=num_generated,
+                                            num_visited=num_visited)
+                    return {
+                        "generated": num_generated,
+                        "visited": num_visited,
+                        "moves": len(solution) - 1,
+                        "order": [s.direction.value for s in solution[1:]]
+                    }
 
                 for child_node in curr_node.get_children():
                     num_generated += 1
                     child_node_key = str(child_node)
                     if child_node_key not in reached or child_node < reached[child_node_key]:
                         reached[child_node_key] = child_node
-                        frontier.put((child_node.f_score, child_node))
+                        frontier.append(child_node)
 
-            frontier.queue = frontier.queue[:k]
+            frontier = sorted(frontier, key=lambda node: node.f_score)[:k]
 
-        print("** No solution found **")
-        return None, num_generated, num_visited
+        if not self.no_print:
+            print("** No solution found **")
+        return {
+            "generated": num_generated,
+            "visited": num_visited,
+            "moves": None,
+            "order": None
+        }
+
+    def get_solution(self, node):
+        '''Returns the solution path from the start state to the goal state.'''
+
+        solution = []
+        while node:
+            solution.insert(0, node)
+            node = node.parent
+
+        return solution
 
     def print_path(self, solution):
         '''Prints the path from the start state to the goal state.'''
@@ -117,28 +164,22 @@ class EightPuzzleSolver(State):
                 arrow = f"{' ' * (State.COLUMNS * 2 - 1)}\\'/{' ' * (State.COLUMNS * 2 - 1)}"
                 print(f"\n{line}\n{line}\n{arrow}\n")
 
-    def print_solution(self, node=None, num_generated=None, num_visited=None, print_path=False):
+    def print_solution(self, solution, num_generated=None, num_visited=None):
         '''Prints the solution to the puzzle.'''
 
         print("** Solution found **")
 
-        solution = []
-        while node:
-            solution.insert(0, node)
-            node = node.parent
-
-        if print_path:
+        if not self.no_print and self.show_path:
             self.print_path(solution)
         if num_generated:
             print("Generated:", num_generated)
         if num_visited:
             print("Visited:", num_visited)
 
-        solution = [s for s in solution if s.direction]
-        print("Moves:", len(solution))
+        print("Moves:", len(solution) - 1)
         print("Order:", end=" ")
         print(" -> ".join([s if isinstance(s, str)
-              else s.direction.value for s in ["START"] + solution + ["GOAL"]]))
+              else s.direction.value for s in ["START"] + solution[1:] + ["GOAL"]]))
 
 
 class ACTION(str, Enum):

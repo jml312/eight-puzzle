@@ -42,7 +42,7 @@ class State:
             [CELL.SIX.value, CELL.SEVEN.value, CELL.EIGHT.value]]
 
     def __init__(self, state=None, goal=GOAL):
-        seed(1)
+        seed(42)
         if state:
             self.set_state(state)
         self.goal = goal
@@ -151,10 +151,11 @@ class State:
         for i in range(self.ROWS):
             for j in range(self.COLUMNS):
                 if self.state[i][j] != CELL.BLANK:
-                    curr_pos = (i, j)
-                    target_pos = find_target_position(self.state[i][j])
-                    manhattan_distance += abs(curr_pos[0] - target_pos[0]) + abs(
-                        curr_pos[1] - target_pos[1])
+                    curr_row, curr_col = (i, j)
+                    target_row, target_col = find_target_position(
+                        self.state[i][j])
+                    manhattan_distance += abs(curr_row - target_row) + abs(
+                        curr_col - target_col)
         return manhattan_distance
 
     def __repr__(self):
