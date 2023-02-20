@@ -1,5 +1,5 @@
 from enum import Enum
-from random import seed, choice
+from random import choice, seed
 
 
 class CELL(str, Enum):
@@ -42,7 +42,6 @@ class State:
             [CELL.SIX.value, CELL.SEVEN.value, CELL.EIGHT.value]]
 
     def __init__(self, state=None, goal=GOAL):
-        seed(42)
         if state:
             self.set_state(state)
         self.goal = goal
@@ -111,6 +110,7 @@ class State:
     def randomize_state(self, n):
         '''Randomizes the state of the puzzle by making n random moves from the goal state.'''
 
+        seed(0)
         self.set_state([row[:] for row in self.goal])
         for _ in range(n):
             self.move(choice(list(DIRECTION)))

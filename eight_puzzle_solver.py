@@ -8,7 +8,7 @@ from state_node import StateNode
 class EightPuzzleSolver(State):
     '''Solver for the eight puzzle game using either the A* or beam search algorithm.'''
 
-    def __init__(self,  no_print=False, show_path=False):
+    def __init__(self, no_print=False, show_path=False):
         super().__init__()
         self.max_nodes = None
         self.no_print = no_print
@@ -42,12 +42,12 @@ class EightPuzzleSolver(State):
                 return {
                     "generated": num_generated,
                     "visited": num_visited,
-                    "moves": None,
-                    "order": None
+                    "moves": 0,
+                    "order": [],
                 }
 
             if curr_node.is_goal():
-                solution = self.get_solution(curr_node)
+                solution = self.get_solution(end_node=curr_node)
                 if not self.no_print:
                     self.print_solution(solution=solution,
                                         num_generated=num_generated,
@@ -72,8 +72,8 @@ class EightPuzzleSolver(State):
         return {
             "generated": num_generated,
             "visited": num_visited,
-            "moves": None,
-            "order": None
+            "moves": 0,
+            "order": []
         }
 
     def solve_beam(self, k):
@@ -104,12 +104,12 @@ class EightPuzzleSolver(State):
                     return {
                         "generated": num_generated,
                         "visited": num_visited,
-                        "moves": None,
-                        "order": None
+                        "moves": 0,
+                        "order": []
                     }
 
                 if curr_node.is_goal():
-                    solution = self.get_solution(curr_node)
+                    solution = self.get_solution(end_node=curr_node)
                     if not self.no_print:
                         self.print_solution(solution=solution,
                                             num_generated=num_generated,
@@ -135,17 +135,17 @@ class EightPuzzleSolver(State):
         return {
             "generated": num_generated,
             "visited": num_visited,
-            "moves": None,
-            "order": None
+            "moves": 0,
+            "order": []
         }
 
-    def get_solution(self, node):
+    def get_solution(self, end_node):
         '''Returns the solution path from the start state to the goal state.'''
 
         solution = []
-        while node:
-            solution.insert(0, node)
-            node = node.parent
+        while end_node:
+            solution.insert(0, end_node)
+            end_node = end_node.parent
 
         return solution
 
