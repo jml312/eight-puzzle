@@ -7,8 +7,8 @@ class StateNode:
     def __init__(self, state, heuristic, g_score, direction=None, parent=None):
         self.state = state
         self.heuristic = heuristic
-        self.g_score = g_score
         self.h_score = self.state.h_score(self.heuristic)
+        self.g_score = g_score
         self.f_score = self.g_score + self.h_score
         self.direction = direction
         self.parent = parent

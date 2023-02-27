@@ -1,21 +1,26 @@
+# TODO: testing
+# TODO: report
+
 from enum import Enum
 from sys import argv
 from queue import PriorityQueue
-from state import State, CELL, DIRECTION, HEURISTIC
+from state import State, DIRECTION, HEURISTIC
 from state_node import StateNode
 
 
-class EightPuzzleSolver(State):
-    '''Solver for the eight puzzle game using either the A* or beam search algorithm.'''
+class PuzzleSolver(State):
+    '''Solver for an n x n sliding puzzle game using either the A* or beam search algorithm.'''
 
-    def __init__(self, no_print=False, show_path=False):
-        super().__init__()
+    def __init__(self, rows, columns, goal, no_print=False, show_path=False):
+        super().__init__(rows, columns, goal)
         self.max_nodes = None
         self.no_print = no_print
         self.show_path = show_path
 
     def solve_a_star(self, heuristic):
         '''Solves the puzzle using the A* algorithm with the specified heuristic. Returns the solution node (or None), number of generated nodes, and number of visited nodes.'''
+
+        assert self.state, State.STATE_NOT_SET
 
         if not self.no_print:
             print(f"\nSolving with A-star {heuristic}")
@@ -44,6 +49,7 @@ class EightPuzzleSolver(State):
                     "visited": num_visited,
                     "moves": 0,
                     "order": [],
+                    "success": False,
                 }
 
             if curr_node.is_goal():
@@ -56,7 +62,8 @@ class EightPuzzleSolver(State):
                     "generated": num_generated,
                     "visited": num_visited,
                     "moves": len(solution) - 1,
-                    "order": [s.direction.value for s in solution[1:]]
+                    "order": [s.direction.value for s in solution[1:]],
+                    "success": True
                 }
 
             for child_node in curr_node.get_children():
@@ -73,11 +80,14 @@ class EightPuzzleSolver(State):
             "generated": num_generated,
             "visited": num_visited,
             "moves": 0,
-            "order": []
+            "order": [],
+            "success": False
         }
 
     def solve_beam(self, k):
-        '''Solves the puzzle using the beam search algorithm with the specified k value. Returns the solution node (or None), number of generated nodes, and number of visited nodes.'''
+        '''Solves the puzzle using the beam search algorithm with the specified k value. Uses manhattan distance as heuristic. Returns the solution node (or None), number of generated nodes, and number of visited nodes. '''
+
+        assert self.state, State.STATE_NOT_SET
 
         if not self.no_print:
             print(f"\nSolving with beam {k}")
@@ -105,7 +115,8 @@ class EightPuzzleSolver(State):
                         "generated": num_generated,
                         "visited": num_visited,
                         "moves": 0,
-                        "order": []
+                        "order": [],
+                        "success": False,
                     }
 
                 if curr_node.is_goal():
@@ -118,7 +129,8 @@ class EightPuzzleSolver(State):
                         "generated": num_generated,
                         "visited": num_visited,
                         "moves": len(solution) - 1,
-                        "order": [s.direction.value for s in solution[1:]]
+                        "order": [s.direction.value for s in solution[1:]],
+                        "success": True
                     }
 
                 for child_node in curr_node.get_children():
@@ -136,11 +148,14 @@ class EightPuzzleSolver(State):
             "generated": num_generated,
             "visited": num_visited,
             "moves": 0,
-            "order": []
+            "order": [],
+            "success": False
         }
 
     def get_solution(self, end_node):
         '''Returns the solution path from the start state to the goal state.'''
+
+        assert self.state, State.STATE_NOT_SET
 
         solution = []
         while end_node:
@@ -152,6 +167,8 @@ class EightPuzzleSolver(State):
     def print_path(self, solution):
         '''Prints the path from the start state to the goal state.'''
 
+        assert self.state, State.STATE_NOT_SET
+
         for idx, node in enumerate(solution):
             is_last_move = idx == len(solution) - 1
             print("Start" if idx ==
@@ -160,12 +177,14 @@ class EightPuzzleSolver(State):
                 print("** Goal **")
             node.state.pretty_print_state()
             if not is_last_move:
-                line = f"{' ' * State.COLUMNS * 2}|{' ' * State.COLUMNS * 2}"
-                arrow = f"{' ' * (State.COLUMNS * 2 - 1)}\\'/{' ' * (State.COLUMNS * 2 - 1)}"
+                line = f"{' ' * self.columns * 2}|{' ' * self.columns * 2}"
+                arrow = f"{' ' * (self.columns * 2 - 1)}\\'/{' ' * (self.columns * 2 - 1)}"
                 print(f"\n{line}\n{line}\n{arrow}\n")
 
     def print_solution(self, solution, num_generated=None, num_visited=None):
         '''Prints the solution to the puzzle.'''
+
+        assert self.state, State.STATE_NOT_SET
 
         print("** Solution found **")
 
@@ -204,7 +223,8 @@ def action_usage(action):
     '''Raises an InvalidActionError with the correct usage for the given action.'''
 
     if action == ACTION.SET_STATE:
-        raise InvalidActionError("\"setState <row1> <row2> <row3>\"")
+        raise InvalidActionError(
+            "\"setState <row1> <row2> <row3> (cells consist of one of the following values: 1, 2, 3, 4, 5, 6, 7, 8, b)\"")
 
     elif action == ACTION.RANDOMIZE_STATE:
         raise InvalidActionError("\"randomizeState <num_moves>\"")
@@ -227,12 +247,21 @@ def action_usage(action):
 
 if __name__ == "__main__":
     if len(argv) != 2:
-        print("Usage: python eight_puzzle_solver.py <input_file_path>")
+        print("Usage: python puzzle_solver.py <input_file_path>")
         exit()
     try:
         input_file_path = argv[1]
         with open(input_file_path, "r") as f:
-            eight_puzzle_solver = EightPuzzleSolver()
+
+            # define puzzle solver values for 3x3 puzzle
+            rows = 3
+            columns = 3
+            goal = [[State.BLANK_VALUE, 1, 2], [3, 4, 5], [6, 7, 8]]
+            puzzle_values = [
+                str(cell) if cell != State.BLANK_VALUE else "b" for row in goal for cell in row]
+            puzzle_solver = PuzzleSolver(
+                rows=rows, columns=columns, goal=goal, show_path=True)
+
             lines = [line for line in f.readlines() if not line.isspace()]
 
             for line in lines:
@@ -244,14 +273,16 @@ if __name__ == "__main__":
                         action_usage(ACTION.SET_STATE)
 
                     valid_cells = all(
-                        [cell in CELL._value2member_map_ for row in "".join(action_args[1:])for cell in row])
+                        cell in puzzle_values for row in "".join(action_args[1:]) for cell in row
+                    )
                     valid_duplicates = len(
-                        set("".join(action_args[1:]))) == State.ROWS * State.COLUMNS
+                        set("".join(action_args[1:]))) == rows * columns
                     if not valid_cells or not valid_duplicates:
                         action_usage(ACTION.SET_STATE)
 
-                    new_state = [list(row) for row in action_args[1:]]
-                    eight_puzzle_solver.set_state(new_state)
+                    new_state = [
+                        [int(cell) if cell != "b" else State.BLANK_VALUE for cell in row] for row in action_args[1:]]
+                    puzzle_solver.set_state(new_state)
 
                 elif line.startswith(ACTION.RANDOMIZE_STATE):
                     valid_arg_length = len(action_args) == 2
@@ -264,14 +295,14 @@ if __name__ == "__main__":
                         action_usage(ACTION.RANDOMIZE_STATE)
 
                     n = int(action_args[1])
-                    eight_puzzle_solver.randomize_state(n)
+                    puzzle_solver.randomize_state(n)
 
                 elif line.startswith(ACTION.PRINT_STATE):
                     valid_arg_length = len(action_args) == 1
                     if not valid_arg_length:
                         action_usage(ACTION.PRINT_STATE)
 
-                    eight_puzzle_solver.pretty_print_state()
+                    puzzle_solver.pretty_print_state()
 
                 elif line.startswith(ACTION.MOVE):
                     valid_arg_length = len(action_args) == 2
@@ -283,7 +314,7 @@ if __name__ == "__main__":
                         action_usage(ACTION.MOVE)
 
                     direction = action_args[1]
-                    eight_puzzle_solver.move(direction)
+                    puzzle_solver.move(direction)
 
                 elif line.startswith(ACTION.MAX_NODES):
                     valid_arg_length = len(action_args) == 2
@@ -296,7 +327,7 @@ if __name__ == "__main__":
                         action_usage(ACTION.MAX_NODES)
 
                     n = int(action_args[1])
-                    eight_puzzle_solver.max_nodes = n
+                    puzzle_solver.max_nodes = n
 
                 elif line.startswith(ACTION.A_STAR):
                     valid_arg_length = len(action_args) == 3
@@ -308,7 +339,7 @@ if __name__ == "__main__":
                         action_usage(ACTION.A_STAR)
 
                     heuristic = action_args[2]
-                    eight_puzzle_solver.solve_a_star(heuristic)
+                    puzzle_solver.solve_a_star(heuristic)
 
                 elif line.startswith(ACTION.BEAM):
                     valid_arg_length = len(action_args) == 3
@@ -321,7 +352,7 @@ if __name__ == "__main__":
                         action_usage(ACTION.BEAM)
 
                     k = int(action_args[2])
-                    eight_puzzle_solver.solve_beam(k)
+                    puzzle_solver.solve_beam(k)
 
                 else:
                     valid_actions = ", ".join(
