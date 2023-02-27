@@ -25,9 +25,7 @@ class State:
     BLANK_VALUE_STR = "b"
     STATE_NOT_SET = "State is not set."
 
-    def __init__(self, rows, columns, goal, state=None):
-        self.rows = rows
-        self.columns = columns
+    def __init__(self, goal, state=None):
         self.goal = goal
 
         if state:
@@ -37,17 +35,15 @@ class State:
         '''Sets the state of the puzzle.'''
 
         self.state = state
-        self.blank_position = self.find_blank_position()
+        self.rows = len(state)
+        self.columns = len(state[0])
 
-    def find_blank_position(self):
-        '''Finds the position of the blank cell in the state.'''
-
-        assert self.state, self.STATE_NOT_SET
-
+        # find the position of the blank cell
         for i in range(self.rows):
             for j in range(self.columns):
                 if self.state[i][j] == self.BLANK_VALUE:
-                    return (i, j)
+                    self.blank_position = (i, j)
+                    return
 
     def print_state(self):
         '''Prints the state of the puzzle.'''
@@ -79,9 +75,9 @@ class State:
             state_str.append(curr_row)
 
         for idx, row in enumerate(state_str):
-            is_last_row = idx == self.rows - 1
             print("-" * col_width)
             print(("|" + " {} |" * self.columns).format(*row))
+            is_last_row = idx == self.rows - 1
             if is_last_row:
                 print("-" * col_width)
 
@@ -131,7 +127,7 @@ class State:
 
         assert self.state, self.STATE_NOT_SET
 
-        return State(rows=self.rows, columns=self.columns, goal=self.goal, state=[row[:] for row in self.state])
+        return State(goal=self.goal, state=[row[:] for row in self.state])
 
     def h_score(self, heuristic):
         '''Returns the heuristic score of the state based on the given heuristic.'''

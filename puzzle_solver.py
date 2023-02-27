@@ -12,8 +12,8 @@ from state_node import StateNode
 class PuzzleSolver(State):
     '''Solver for an n x n sliding puzzle game using either the A* or beam search algorithm.'''
 
-    def __init__(self, rows, columns, goal, no_print=False, show_path=False):
-        super().__init__(rows, columns, goal)
+    def __init__(self, goal, no_print=False, show_path=False):
+        super().__init__(goal)
         self.max_nodes = None
         self.no_print = no_print
         self.show_path = show_path
@@ -189,7 +189,7 @@ class PuzzleSolver(State):
 
         print("** Solution found **")
 
-        if not self.no_print and self.show_path:
+        if self.show_path:
             self.print_path(solution)
         if num_generated:
             print("Generated:", num_generated)
@@ -255,13 +255,10 @@ if __name__ == "__main__":
         with open(input_file_path, "r") as f:
 
             # define puzzle solver values for 3x3 puzzle
-            rows = 3
-            columns = 3
             goal = [[State.BLANK_VALUE, 1, 2], [3, 4, 5], [6, 7, 8]]
             puzzle_values = [
                 str(cell) if cell != State.BLANK_VALUE else State.BLANK_VALUE_STR for row in goal for cell in row]
-            puzzle_solver = PuzzleSolver(
-                rows=rows, columns=columns, goal=goal, show_path=True)
+            puzzle_solver = PuzzleSolver(goal=goal, show_path=True)
 
             lines = [line for line in f.readlines() if not line.isspace()]
 
@@ -277,7 +274,7 @@ if __name__ == "__main__":
                         cell in puzzle_values for row in "".join(action_args[1:]) for cell in row
                     )
                     valid_duplicates = len(
-                        set("".join(action_args[1:]))) == rows * columns
+                        set("".join(action_args[1:]))) == puzzle_solver.rows * puzzle_solver.columns
                     if not valid_cells or not valid_duplicates:
                         action_usage(ACTION.SET_STATE)
 
