@@ -137,11 +137,11 @@ class PuzzleSolver(State):
                 for child_node in curr_node.get_children():
                     num_generated += 1
                     child_node_key = str(child_node)
-                    if child_node_key not in reached or child_node < reached[child_node_key]:
+                    if child_node_key not in reached or child_node.h_score < reached[child_node_key].h_score:
                         reached[child_node_key] = child_node
                         frontier.append(child_node)
 
-            frontier = sorted(frontier, key=lambda node: node.f_score)[:k]
+            frontier = sorted(frontier, key=lambda node: node.h_score)[:k]
 
         if not self.no_print:
             print("** No solution found **")
@@ -259,7 +259,7 @@ if __name__ == "__main__":
             columns = 3
             goal = [[State.BLANK_VALUE, 1, 2], [3, 4, 5], [6, 7, 8]]
             puzzle_values = [
-                str(cell) if cell != State.BLANK_VALUE else "b" for row in goal for cell in row]
+                str(cell) if cell != State.BLANK_VALUE else State.BLANK_VALUE_STR for row in goal for cell in row]
             puzzle_solver = PuzzleSolver(
                 rows=rows, columns=columns, goal=goal, show_path=True)
 
@@ -282,7 +282,7 @@ if __name__ == "__main__":
                         action_usage(ACTION.SET_STATE)
 
                     new_state = [
-                        [int(cell) if cell != "b" else State.BLANK_VALUE for cell in row] for row in action_args[1:]]
+                        [int(cell) if cell != State.BLANK_VALUE_STR else State.BLANK_VALUE for cell in row] for row in action_args[1:]]
                     puzzle_solver.set_state(new_state)
 
                 elif line.startswith(ACTION.RANDOMIZE_STATE):

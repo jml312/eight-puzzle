@@ -183,4 +183,4 @@ class State:
         assert self.state, self.STATE_NOT_SET
 
         return " ".join(["".join(map(
-            lambda x: str(x) if x != self.BLANK_VALUE else "b", cell)) for cell in self.state])
+            lambda x: str(x) if x != self.BLANK_VALUE else self.BLANK_VALUE_STR, cell)) for cell in self.state])
