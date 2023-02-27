@@ -1,4 +1,5 @@
 # TODO: testing
+# TODO: (README) explain how to run
 # TODO: report
 
 from enum import Enum

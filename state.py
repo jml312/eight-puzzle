@@ -62,7 +62,7 @@ class State:
         assert self.state, self.STATE_NOT_SET
 
         max_val_len = len(str(max(max(self.state))))
-        col_width = (max_val_len * 3) * self.columns + self.columns + 1
+        col_width = (max_val_len + 2) * self.columns + self.columns + 1
 
         # convert state to equal length strings
         state_str = []
@@ -81,9 +81,7 @@ class State:
         for idx, row in enumerate(state_str):
             is_last_row = idx == self.rows - 1
             print("-" * col_width)
-            row_str = ("|" + ((' ' * max_val_len) +
-                              "{}" + (' ' * max_val_len) + "|") * self.columns).format(*row)
-            print(row_str)
+            print(("|" + " {} |" * self.columns).format(*row))
             if is_last_row:
                 print("-" * col_width)
 
